@@ -147,7 +147,7 @@ p.value <- permuted.F |>
 p.value
 ```
 
-Challenge 2
+#Challenge 2
 
 Data Wrangling, One- and Two-Factor ANOVA
 
@@ -174,17 +174,22 @@ Step 2
 Make a boxplot or violin plot of your new relative tarsus length variable in relation to Primary.Lifestyle and of your new relative beak length variable in relation to Trophic.Niche
 
 ```{r}
-ggplot(d|>filter(!is.na(Primary.Lifestyle)),aes(x=Primary.Lifestyle, y=relTL))+
+plot1 <- ggplot(d|>filter(!is.na(Primary.Lifestyle)),aes(x=Primary.Lifestyle, y=relTL))+
   geom_boxplot()+
-  theme(axis.text.x=element_text(angle=90))
+  theme(axis.text.x=element_text(angle=90, hjust=1))+
+  geom_jitter(alpha=0.05)
 
+plot(plot1)
 
-ggplot(data=d |> filter (!is.na(Trophic.Niche)), aes(x=Trophic.Niche, y = relBL))+
+plot2 <- ggplot(data=d |> filter (!is.na(Trophic.Niche)), aes(x=Trophic.Niche, y = relBL))+
   geom_boxplot()+
-  theme(axis.text.x=element_text(angle=90))
+  theme(axis.text.x=element_text(angle=90)) +
+  geom_jitter(alpha=0.05)
 
+plot(plot2)
+#if you want to plot both next to eachother
 
-
+plot_grid(plot1, plot2, nrow =1)
 
 ```
 
@@ -198,18 +203,31 @@ Given the regression coefficients returned in output of the model, which Migrati
 
 
 ```{r}
+library(mosaic)
 
-ggplot (d, aes(x=as.factor(Migration),y=Range.Size))+
-  geom_boxplot()+geom_jitter()
 m<-aov(Range.Size~as.factor(Migration), data=d)
 
 summary(m)
 TukeyHSD(m)
 
+#Here we drop migration
+
+migration <- d |>
+    drop_na(Migration)
+
+histogram(migration$Range.Size)
+#histogram(migration$log(Range.Size))
+
+#m1reg <- lm(log(Range.Size) ~ as.factor (Migration),data=d)
+#m1reg <- lm(log(Range.Size) ~ (Migration),data=d)
+#histogram(m1reg)
+
+ggplot (d, aes(x=as.factor(Migration),y=Range.Size))+
+  geom_boxplot()+geom_jitter()
+
 ggplot(d|>filter(!is.na(Migration)), aes(x=as.factor(Migration), y=log(Range.Size)))+
   geom_boxplot() +geom_jitter(aes(alpha=0.005))
 
-m1reg <- lm(log(Range.Size) ~ as.factor (Migration),data=d)
 
 summary(m1reg)|> tidy()
 
