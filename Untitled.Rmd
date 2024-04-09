@@ -104,6 +104,10 @@ m1aov <- aov(log(Mass) ~Trophic.Level, data=d)
 (posthoc <- TukeyHSD (m1aov, which= "Trophic.Level", conf.level = 0.95))
 #(posthoc <- TukeyHSD (m1aov, which= "Migration", conf.level = 0.95))
 plot(posthoc)
+
+m2 <- aov(log(Mass) ~ Migration, data = d)
+(posthoc <- TukeyHSD(m2, which = "Migration", conf.level = 0.95))
+plot(posthoc)
 ```
 Step 4
 
@@ -113,11 +117,14 @@ Use a permutation approach to inference to generate a null distribution of F sta
 library(broom)
 original.F <- aov(log(Mass) ~Trophic.Level, data=d) |>
   tidy() |>
-  filter(term== "Trophic.Level")
+  filter(term== "Trophic.Level")|>
+  pull(statistic)
+
 original.F
 
 #by using infer
 library(infer)
+
 d <-d|> mutate(logMass = log(Mass))
 permuted.F <-d|>
   specify(logMass ~Trophic.Level)|>
@@ -125,9 +132,19 @@ permuted.F <-d|>
   generate(reps = 1000, type = "permute") |>
   calculate(stat ="F")
 
-visualize(permuted.F) + shade_p_value(obs_stat = original.F$statistic, direction = "greater")
-p_value<- permuted.F|> get_p_value(obs_stat = original.F$statistic, direction = "greater")
-original.F$p.value
+visualize(permuted.F) + shade_p_value(obs_stat = original.F, direction = "greater")
+
+p_value<- permuted.F|> get_p_value(obs_stat = original.F, direction = "greater")
+
+#original.F$p.value
+
+#permuted.F <- as_tibble(permuted.F) |>
+ #   rename(stat = "result")
+
+p.value <- permuted.F |>
+    get_p_value(obs_stat = original.F, direction = "greater")
+
+p.value
 ```
 
 Challenge 2
