@@ -306,12 +306,32 @@ plot(plot_4)
 
 plot_grid(plot_grid(plot_1, plot_2, nrow = 1), plot_3, plot_4, nrow = 3)
 ```
+Run linear models for each predictor separately and interpret the model output.
+
+```{r}
+m5 <- lm(relBL ~ Primary.Lifestyle, data = passer)
+m6 <- lm(relBL ~ Trophic.Level, data = passer)
+summary(m5)
+summary(m6)
+```
 
 Step 5
 Run a two-factor model to look at the association between relative beak length and both Primary.Lifestyle and Trophic.Level among the passeriforms. Based on the model output, what would you conclude about how relative beak length is related to these two variables?
-
+```{r}
+m7 <- lm(relBL ~ Primary.Lifestyle + Trophic.Level, data = passer)
+tidy(m7)
+```
 Step 6
 Finally, run an additional two-way model with the same dataset and predictors, but adding the possibility of an interaction term. To do this, you should modify your model formula using the colon operator (:) to specify the interaction, e.g., relative beak length ~ Primary.Lifestyle + Trophic.Level + Primary.Lifestyle:Trophic.Level. Based on the model output, what would you now conclude about how relative beak length is related to these two variables?
+
+```{r}
+m8 <- lm(relBL ~ Primary.Lifestyle + Trophic.Level + Primary.Lifestyle:Trophic.Level,
+    data = passer)
+
+summary(m8)
+
+
+```
 Step 7
 Use the interaction.plot() function to visualize the interaction between Primary.Lifestyle and Trophic.Level (see Module 20).
 
@@ -362,7 +382,9 @@ interaction.plot(
   ylab="Mean Relative Beak Length"
 )
 
-interaction.plot(
+
+
+  interaction.plot(
   x.factor=p$Primary.Lifestyle,
   xlab="PrimaryLifestyle",
   trace.factor = p$Trophic.Level,
@@ -370,6 +392,7 @@ interaction.plot(
   response=p$relBL,
   ylab="Mean Relative Beak Length"
 )
+
 
 m3 <-aov(relBL~Primary.Lifestyle+Trophic.Level, data=p)
 m4<-aov(relBL~Primary.Lifestyle+Trophic.Level+ Primary.Lifestyle:Trophic.Level, data=p)
