@@ -5,15 +5,30 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+
+Here are the packages I will need:
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
 library(tidyverse)
 library(skimr)
+library(cowplot)
+
+
+```
+
+```{r setup, include=FALSE}
+
 
 f <- "https://raw.githubusercontent.com/difiore/ada-2024-datasets/main/AVONETdataset1.csv"
 
 d<- read_csv(f, col_names = TRUE)
 
 d<- d|> select(c("Species1", "Family1", "Order1", "Beak.Width", "Beak.Depth", "Beak.Length_Culmen", "Tarsus.Length", "Wing.Length", "Tail.Length", "Mass", "Habitat", "Migration", "Trophic.Level", "Trophic.Niche", "Min.Latitude", "Max.Latitude", "Centroid.Latitude", "Primary.Lifestyle", "Range.Size"))
+
+(skim(d))
 
 ```
 
@@ -24,23 +39,38 @@ Step 1
 Make boxplots of log(Mass) in relation to Trophic.Level and Migration behavior type. For each plot, drop from the visualization all species records where the categorical variable of interest is missing from the dataset. Also, you will want to convert the variable Migration (which is scored as a number: “1”, “2”, or “3”) from class numeric to either being classified as a factor or as a character (string) variable.
 
 ```{r}
-library(ggplot2)
-library(dplyr)
-library(tidyr)
+
 #Make boxplots of log(Mass) in relation to Trophic.Level and Migration behavior type.
-ggplot(data=d |> drop_na(Trophic.Level), aes(x = Trophic.Level, y=log(Mass)))+ geom_boxplot() + geom_jitter()
+ggplot(data=d |> drop_na(Trophic.Level), aes(x = Trophic.Level, y=log(Mass)))+ geom_boxplot() + geom_jitter( alpha = 0.05)
 
 
 ggplot(data=d|> drop_na(Migration), aes(x=as.factor(Migration), y=log(Mass)))+geom_boxplot()
 
+#an alternate way below
+d <- d |>
+    mutate(logMass = log(Mass), logRS = log(Range.Size), logBeak = log(Beak.Length_Culmen),
+        logTarsus = log(Tarsus.Length), Migration = as.factor(Migration))
+
+p1 <- ggplot(data = d |>
+    drop_na(Trophic.Level), aes(x = Trophic.Level, y = log(Mass))) + geom_boxplot() +
+    geom_jitter(alpha = 0.05)
+plot(p1)
+
+p2 <- ggplot(data = d |>
+    drop_na(Migration), aes(x = Migration, y = log(Mass))) + geom_boxplot() + geom_jitter(alpha = 0.05)
+
+#plotting the box plots next to eachother
+plot_grid(p1, p2, nrow = 1)
 
 ```
 Step 2
 Run linear models using the lm() function to look at the relationship between log(Mass) and Trophic.Level and between log(Mass) and Migration.
 
-Examine the output of the resultant linear models. Is log(Mass) associated with either Trophic.Level or Migration category? That is, in the global test of significance, is the F statistic large enough to reject the null hypothesis of an F value of zero?
-
-Given the regression coefficients returned for your Migration model, which Migration categor(ies) are different than the reference level? What level is the reference level? Relevel and assess differences among the remaining pair of Migration categories.
+Examine the output of the resultant linear models. Is log(Mass) associated with either Trophic.Level or Migration category? That is, in the global test of significance, is the F statistic large enough to reject the null hypothesis of an F value of zero?Given the regression coefficients returned for your Migration model, which Migration categor(ies) are different than the reference level? 
+Levels 2 and 3 differ from the reference level.
+What level is the reference level?
+The reference level is level 1.
+Relevel and assess differences among the remaining pair of Migration categories.
 
 ```{r}
 m1 <- lm(log (Mass) ~ Trophic.Level, data=d)
@@ -55,8 +85,9 @@ summary(m1)
 summary(m2)
 
 #Relevel
-MMigration <- as.factor(d$Migration)
-d <- d|> mutate(Migration = relevel (MMigration, ref = "3"))
+#MMigration <- as.factor(d$Migration)
+#d <- d|> mutate(Migration = relevel (MMigration, ref = "3"))
+d <- d|> mutate(Migration = relevel (Migration, ref = "3"))
 m2 <- lm(log(Mass) ~ Migration, data = d)
 
 summary(m2)
@@ -69,7 +100,8 @@ Conduct a post-hoc Tukey Honest Significant Differences test to also evaluate wh
 m1aov <- aov(log(Mass) ~Trophic.Level, data=d)
 (pairwise.t.test(log(d$Mass), d$Trophic.Level, p.adj = "bonferroni"))
 (posthoc <- TukeyHSD (m1aov, which= "Trophic.Level", conf.level = 0.95))
-
+#(posthoc <- TukeyHSD (m1aov, which= "Migration", conf.level = 0.95))
+plot(posthoc)
 ```
 Step 4
 
@@ -259,8 +291,10 @@ anova(m2,m3, test="F")
 ```{r}
 
 ```
-In class
-```{r}
+ Below are incorporated class notes
+ 
+ fIn class
+#```{r}
 
 d<- d |> mutate(logMass = log(Mass),
                 logRS = log(Range.Size),
@@ -277,7 +311,7 @@ m3 <-lm(data=d, logBeak ~logRS)
 m4 <- lm(data=d, logBeak ~Migration)
 m5 <- lm(data=d, logBeak ~1)
 
-anova(m2, m1, test = "F")
+#anova(m2, m1, test = "F")
 
 #models didnt converge because one of them have data for 
 
@@ -289,7 +323,7 @@ anova(m3, m2, test = "F")
 
 With same AVONET dataset we will Explore forward and backward selection
 
-```{r}
+#```{r}
 
 d_new <- d %>%
   drop_na(logBeak, logRS, Migration, Trophic.Level, logTarsus, Primary.Lifestyle)
@@ -341,7 +375,7 @@ Use this approach to see whether variances in across groups in your various mode
 
 In class
 Backwards selection:
-```{r}
+####```{r}
 
 m_full <-lm(data=d_new, logBeak ~1 + logRS +logTarsus + Migration +Trophic.Level + Primary.Lifestyle)
 
@@ -369,7 +403,8 @@ library(MASS)
 highest AIC = best data
 
 April 3
-```{r}
+
+###```{r}
 d_new <- d %>%
   drop_na(logBeak, logRS, Migration, Trophic.Level, logTarsus, Primary.Lifestyle)
 
@@ -382,7 +417,7 @@ s<- stepAIC(m_null, scope = .~.)
 
 ```
 
-```{r}
+####```{r}
 
 library(MuMIn)
 m_full <- lm(data= d_new, relBeak ~ logRS + Migration + Trophic.Level + relTarsus + Primary.Lifestyle, na.action = na.fail)
@@ -413,7 +448,7 @@ mods
 
 
 
-```{r}
+####```{r}
 f <- "https://raw.githubusercontent.com/difiore/ada-2024-datasets/main/Mammal_lifehistories_v2.txt"
 d<- read_tsv(f, col_names= TRUE)
 
