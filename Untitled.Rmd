@@ -15,10 +15,9 @@ library(tidyr)
 library(tidyverse)
 library(skimr)
 library(cowplot)
-
-
 ```
 
+#Loading and reading data
 ```{r setup, include=FALSE}
 
 
@@ -32,7 +31,7 @@ d<- d|> select(c("Species1", "Family1", "Order1", "Beak.Width", "Beak.Depth", "B
 
 ```
 
-Challenge 1
+#Challenge 1
 
 One-Factor ANOVA and Inference
 Step 1
@@ -66,11 +65,14 @@ plot_grid(p1, p2, nrow = 1)
 Step 2
 Run linear models using the lm() function to look at the relationship between log(Mass) and Trophic.Level and between log(Mass) and Migration.
 
-Examine the output of the resultant linear models. Is log(Mass) associated with either Trophic.Level or Migration category? That is, in the global test of significance, is the F statistic large enough to reject the null hypothesis of an F value of zero?Given the regression coefficients returned for your Migration model, which Migration categor(ies) are different than the reference level? 
+Is log(Mass) associated with either Trophic.Level or Migration category? That is, in the global test of significance, is the F statistic large enough to reject the null hypothesis of an F value of zero? Yes, the global test is indeed significant for both Trophi.Level and Migration.
+
+Given the regression coefficients returned for your Migration model, which Migration categor(ies) are different than the reference level? 
 Levels 2 and 3 differ from the reference level.
 What level is the reference level?
 The reference level is level 1.
 Relevel and assess differences among the remaining pair of Migration categories.
+Levels 2 and 3 differe again after releveling.
 
 ```{r}
 m1 <- lm(log (Mass) ~ Trophic.Level, data=d)
