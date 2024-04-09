@@ -238,14 +238,14 @@ plot(histogram(d__new$logRS))
 
 #Violin Plot Migration and logRS
 ggplot (d, aes(x=(Migration),y=logRS))+
-  geom_violin()+geom_jitter(alpha=0.05)
+  geom_violin(col="green")+geom_jitter(alpha=0.05)
 
 #Plot for Migration and Range.Size
 ggplot (d, aes(x=as.factor(Migration),y=Range.Size))+
-  geom_violin()+geom_jitter()
+  geom_violin(col="yellow")+geom_jitter()
 
 ggplot(d|>filter(!is.na(Migration)), aes(x=as.factor(Migration), y=log(Range.Size)))+
-  geom_boxplot() +geom_jitter(aes(alpha=0.05, width = 0.05))
+  geom_boxplot(col="pink") +geom_jitter(aes(alpha=0.05, width = 0.05))
 
 m3<- lm(logRS ~ Migration, data = d__new)
 
@@ -336,7 +336,6 @@ Step 7
 Use the interaction.plot() function to visualize the interaction between Primary.Lifestyle and Trophic.Level (see Module 20).
 
 ```{r}
-
 p <-d|> filter(Order1 == "Passeriformes")
 
 ggplot(d|>filter(!is.na(Primary.Lifestyle)), aes(x=Primary.Lifestyle, y= relBL))+
@@ -363,12 +362,12 @@ ggplot(data=p, aes(x=Trophic.Level, y= relBL))+
 #or we could facet wrap
 
 ggplot(data=p, aes(x=Primary.Lifestyle, y= relBL))+
-  geom_boxplot()+
+  geom_boxplot(col= "red")+
   facet_wrap(vars(Trophic.Level))+
   geom_jitter(alpha =0.05)
 
 ggplot(data=p, aes(x=Trophic.Level, y= relBL))+
-  geom_boxplot()+
+  geom_boxplot(col = "blue")+
   facet_wrap(vars(Primary.Lifestyle))+
   geom_jitter(alpha =0.05)
 
