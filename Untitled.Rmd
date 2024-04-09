@@ -406,9 +406,35 @@ anova(m2,m3, test="F")
 
 ```
 
+Additional Steps?
+In the exercise above, we really did not do any checking with this dataset to see if the data meet the primary assumptions for standard linear regression and ANOVA, which are that variables/residuals within each grouping level are roughly normally distributed and have roughly equal variances. Sample sizes within each grouping level should also be roughly equal. As noted in Module 20, a general rule of thumb for “equal” variances is to compare the largest and smallest within-grouping level standard deviations and, if this value is less than 2, then it is often reasonable to presume the assumption may not be violated.
+
+Use this approach to see whether variances in across groups in your various models (e.g., for relative beak length ~ trophic level) are roughly equal.
+
+Additionally, do a visual check of whether observations and model residuals within groups look to be normally distributed.
 
 ```{r}
+sd_ratio <- passer |>
+    group_by(Trophic.Level) |>
+    summarize(sd = sd(relBL, na.rm = TRUE)) |>
+    pull(sd)
 
+
+
+(sd_ratio <- max(sd_ratio)/min(sd_ratio))
+
+additionalp1 <- ggplot(data = passer, aes(x = relBL)) + geom_histogram(col= "purple") + facet_wrap(~Trophic.Level)
+
+plot(additionalp1)
+
+m6data <- tibble(residuals = m6$residuals, Trophic.Level = m6$model$Trophic.Level)
+summary(m6data)
+
+#additionalp2 <- ggplot(data = m6data, x = "residuals") + facet_wrap(~Trophic.Level)
+
+#plot(additionalp2 )
+
+#plot_grid(additionalp1, additionalp2 , nrow = 2)
 ```
  Below are incorporated class notes
  
@@ -486,11 +512,6 @@ summary(m4)
 ```
 
 
-
-Additional Steps?
-In the exercise above, we really did not do any checking with this dataset to see if the data meet the primary assumptions for standard linear regression and ANOVA, which are that variables/residuals within each grouping level are roughly normally distributed and have roughly equal variances. Sample sizes within each grouping level should also be roughly equal. As noted in Module 20, a general rule of thumb for “equal” variances is to compare the largest and smallest within-grouping level standard deviations and, if this value is less than 2, then it is often reasonable to presume the assumption may not be violated.
-
-Use this approach to see whether variances in across groups in your various models (e.g., for relative beak length ~ trophic level) are roughly equal. Additionally, do a visual check of whether observations and model residuals within groups look to be normally distributed.
 
 In class
 Backwards selection:
