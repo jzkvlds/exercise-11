@@ -110,6 +110,10 @@ d$relBL <-resid(lm(formula=log(Beak.Length_Culmen)~log(Mass), data=d))
 
 d$relTL <-resid(lm(log(Tarsus.Length)~log(Mass),data=d))
 
+relBeak <- d$relBL
+
+relTarsus <- d$relTL
+
 
 
 ```
@@ -255,7 +259,7 @@ anova(m2,m3, test="F")
 ```{r}
 
 ```
-
+In class
 ```{r}
 
 d<- d |> mutate(logMass = log(Mass),
@@ -263,8 +267,70 @@ d<- d |> mutate(logMass = log(Mass),
                 logBeak = log(Beak.Length_Culmen),
                 logTarsus= log(Tarsus.Length),
                 Migration = as.factor(Migration))
+
+m1 <-lm(data=d, logBeak ~logRS * Migration)
+
+m2<-lm(data=d, logBeak ~logRS + Migration)
+
+m3 <-lm(data=d, logBeak ~logRS)
+
+m4 <- lm(data=d, logBeak ~Migration)
+m5 <- lm(data=d, logBeak ~1)
+
+anova(m2, m1, test = "F")
+
+#models didnt converge because one of them have data for 
+
+#we are comparting rs and migration vs rs
+anova(m3, m2, test = "F")
+
+#adding migration does the power.
 ```
 
+With same AVONET dataset we will Explore forward and backward selection
+
+```{r}
+
+d_new <- d %>%
+  drop_na(logBeak, logRS, Migration, Trophic.Level, logTarsus, Primary.Lifestyle)
+  
+lm(data=d_new, logBeak ~ logRS + Migration +Trophic.Level + relTarsus + Primary.Lifestyle)
+
+m_null <- lm(data=d_new, logBeak ~1)
+
+add1(m_null, scope = .~. +logRS + Migration + logTarsus +Trophic.Level + Primary.Lifestyle, test = "F")
+
+#Add primary lifestyle as the new model, it's the largest one
+
+m1 <- update(m_null, formula = .~. + logTarsus)
+
+summary(m1)
+#low p value
+add1(m1, scope = .~. +logRS + Migration +Trophic.Level + logTarsus + Primary.Lifestyle, test = "F")
+
+m2<-update(m1, formula = .~. + Primary.Lifestyle)
+summary(m2)
+#overall still significant model multiple r2 inscreading
+
+add1(m2, scope = .~. +logRS + Migration +Trophic.Level + logTarsus + Primary.Lifestyle, test = "F")
+
+#trophic highest f value, 
+m3<-update(m2, formula = .~. + Trophoic.Level)
+m3
+summary(m3)
+#still significant cuz its getting larger
+
+
+#intercept only model, which predictor adds the most explanitory value. until adding new predictors does not add more explanitory value
+add1(m3, scope = .~. +logRS + Migration +Trophic.Level +logTarsus + Primary.Lifestyle, test = "F")
+
+#trophic highest f value, 
+m4<-update(m3, formula = .~. + logRS)
+summary(m4)
+
+
+
+```
 
 
 
@@ -272,3 +338,98 @@ Additional Steps?
 In the exercise above, we really did not do any checking with this dataset to see if the data meet the primary assumptions for standard linear regression and ANOVA, which are that variables/residuals within each grouping level are roughly normally distributed and have roughly equal variances. Sample sizes within each grouping level should also be roughly equal. As noted in Module 20, a general rule of thumb for “equal” variances is to compare the largest and smallest within-grouping level standard deviations and, if this value is less than 2, then it is often reasonable to presume the assumption may not be violated.
 
 Use this approach to see whether variances in across groups in your various models (e.g., for relative beak length ~ trophic level) are roughly equal. Additionally, do a visual check of whether observations and model residuals within groups look to be normally distributed.
+
+In class
+Backwards selection:
+```{r}
+
+m_full <-lm(data=d_new, logBeak ~1 + logRS +logTarsus + Migration +Trophic.Level + Primary.Lifestyle)
+
+drop1(m_full, test= "F")
+
+#since migration is the lowest F
+
+m2 <-update(m_full, .~. -Migration)
+summary(m2)
+
+
+drop1(m2, test= "F")
+
+m3 <-update(m2, .~. - logRS)
+
+summary(m3)
+
+drop1(m3, test= "F")
+
+m4 <- update(m3, .~. )
+
+
+library(MASS)
+```
+highest AIC = best data
+
+April 3
+```{r}
+d_new <- d %>%
+  drop_na(logBeak, logRS, Migration, Trophic.Level, logTarsus, Primary.Lifestyle)
+
+m_full <- lm(data= d_new, relBeak ~ logRS + relTarsus + Migration + Trophic.Level + Primary.Lifestyle)
+
+
+s <- stepAIC(m_full, scope=.~., direction = "both", trace = TRUE)
+
+s<- stepAIC(m_null, scope = .~.)
+
+```
+
+```{r}
+
+library(MuMIn)
+m_full <- lm(data= d_new, relBeak ~ logRS + Migration + Trophic.Level + relTarsus + Primary.Lifestyle, na.action = na.fail)
+mods <- dredge(m_full)
+class(mods)
+mods.res <- get.models(mods, subset=delta <=4)
+#returns top models where delta.aicc <=4
+
+mods.avg<-summary(model.avg(mods, subset=delta<= 4, fit = TRUE))
+#returns top 
+
+mods.avg<-summary(model.avg(mods, subset = cumsum))
+#mods.res$`31`
+
+confint(mods.avg)
+plot(mods.avg, full = TRUE)
+plot(mods.avg, full = FALSE)
+
+
+mods.avg <- summary (model.avg(mods, subset=delta <=4, fit = TRUE))
+mods
+
+
+
+
+```
+
+
+
+
+```{r}
+f <- "https://raw.githubusercontent.com/difiore/ada-2024-datasets/main/Mammal_lifehistories_v2.txt"
+d<- read_tsv(f, col_names= TRUE)
+
+d[d==-999.00] <- NA
+d<- dplyr::select(d, -`refs`)
+d<- dplyr::select(d, -`litter size`)
+
+colnames(d)
+cols <- c("mass(g)", "gestation(mo)", "newborn(g)","weaning(mo)", "wean mass(g)","AFR(mo)","max. life(mo)","litters/year")
+
+d <- d %>% mutate(across(all_of(cols), log))
+ #replace 999
+# drop refs and litter size variables
+#log transform all other variables
+#regress gestation, weaning, age at firs reproduction, and max lifespan on mass and add residuals to the dataframe (hint na.action=na.exclude)
+#plot residuals of max lifespan in relation to order - which orders have the highest relative newborn mass
+
+#which order have the highest residual lifespan
+```
